@@ -1,33 +1,29 @@
-# (1)コンパイラ
-CC  = g++
-# (2)コンパイルオプション
-CFLAGS    =
-# (3)実行ファイル名
-TARGET  = Sample
-# (4)コンパイル対象のソースコード
-SRCS    = Sample.cpp
-# (5)オブジェクトファイル名
-OBJS    = $(SRCS:.cpp=.o)
+TARGET = app
 
-# (6)インクルードファイルのあるディレクトリパス
-INCDIR  = -I../inc
+SRCS  = $(shell find ./src     -type f -name *.cpp)
+HEADS = $(shell find ./include -type f -name *.h)
+OBJS = $(SRCS:.cpp=.o)
+DEPS = Makefile.depend
 
-# (7)ライブラリファイルのあるディレクトリパス
-LIBDIR  = 
+INCLUDES = -I./include
+CXXFLAGS = -02 -Wall $(INCLUDES)
+LDFLAGS = -lm
 
-# (8)追加するライブラリファイル
-LIBS    = 
 
-# (9)ターゲットファイル生成
-$(TARGET): $(OBJS)
-    $(CC) -o $@ $^ $(LIBDIR) $(LIBS)
+all: $(TARGET)
 
-# (10)オブジェクトファイル生成
-$(OBJS): $(SRCS)
-    $(CC) $(CFLAGS) $(INCDIR) -c $(SRCS)
-
-# (11)"make all"で make cleanとmakeを同時に実施。
-all: clean $(OBJS) $(TARGET)
-# (12).oファイル、実行ファイル、.dファイルを削除
+$(TARGET): $(OBJS) $(HEADS)
+    $(CXX) $(LDFLAGS) -o $@ $(OBJS)
+  
+run: all
+  @./$(TARGET)
+  
+.PHONY: depend clean	
+depend:
+  $(CXX) $(INCLUDES) -MM $(SRCS) > $(DEPS)
+  @sed -i -E "s/^(.+?).o: ([^ ]+?)\1/\2\1.o: \2\1/g" $(DEPS)
+  
 clean:
-    -rm -f $(OBJS) $(TARGET) *.d
+    $(RM) $(OBJS) $(TARGET)
+    
+-include $(DEPS)
